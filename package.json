@@ -25,6 +25,10 @@
     "opensquilla"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Higanoneko/magpie-tokenrhythm-opensquilla.git"
+  },
   "scripts": {
     "test": "node test/tokenrhythm.test.mjs"
   },
