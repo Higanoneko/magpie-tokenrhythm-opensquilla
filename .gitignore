@@ -1,0 +1,5 @@
+node_modules/
+RefRepo/
+.agent-teams/
+.tmp-*
+*.log
