@@ -21,6 +21,7 @@ import {
   CLIENT_ID,
   DEFAULT_ORIGIN,
   OAuthError,
+  PLAN_LABEL,
   TokenRhythmError,
   endpoints,
   ensureModelKey,
@@ -47,7 +48,6 @@ const DEFAULT_LOGIN_TIMEOUT_MS = 300_000
 
 // TokenRhythm is metered pay-as-you-go: the usage card carries no plan window,
 // only the live wallet balance. magpie renders PLAN_LABEL as the billing mode.
-const PLAN_LABEL = "Pay as you go"
 
 // TokenRhythm's System One decision model (JEV). It answers at {BASE}/systemone,
 // not an AI SDK protocol, so it is declared without an npm client and magpie

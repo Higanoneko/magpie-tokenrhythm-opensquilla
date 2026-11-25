@@ -107,17 +107,31 @@ test("walletCard keeps decimal balances as display strings", () => {
   assert.equal(card.plan, "Pay as you go")
   assert.equal(card.user, "Test User")
   assert.equal(card.balance, "12.34 CNY")
-  assert.equal(card.windows[0].name, "Available")
-  assert.equal(card.windows[0].display, "12.34 CNY")
+  // A wallet window carries its figure and no share, so magpie draws no meter
+  // and says "{n} left" itself.
+  assert.equal(card.windows[0].name, "Gift credits")
+  assert.equal(card.windows[0].display, "0.50 CNY")
+  assert.equal(card.windows[0].balance, 0.5)
+  assert.equal(card.windows[0].unit, "CNY")
+  assert.equal("used" in card.windows[0], false)
+  assert.equal("amount" in card.windows[0], false)
+  // Owed money is no balance left: a row of words the card shows and routing
+  // passes over.
+  assert.equal(card.windows[1].name, "Debt")
+  assert.equal(card.windows[1].display, "1.25 CNY")
+  assert.equal(card.windows[1].aside, true)
+  assert.equal("balance" in card.windows[1], false)
   assert.equal(card.signIn, "kept")
   const flat = walletCard({ wallet: { available_balance: "1", currency: "CNY" } })
   assert.equal(flat.balance, "1.00 CNY")
+  assert.equal(flat.windows.length, 0)
 })
 
 test("walletCard renders balances with two decimal places", () => {
   const card = walletCard({ wallet: { currency: "CNY", balances: { available: "186.171994", recharge: "0", bonus: "0", debt: "0", frozen: "0" } } })
   assert.equal(card.balance, "186.17 CNY")
-  assert.equal(card.windows[0].display, "186.17 CNY")
+  // every wallet empty: no window at all, since a balance of 0 reads as used up
+  assert.equal(card.windows.length, 0)
 })
 
 test("model catalog merges public metadata with the live credential list", () => {
