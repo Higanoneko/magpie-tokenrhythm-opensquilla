@@ -33,6 +33,7 @@ import {
   refreshTokens,
   walletCard,
 } from "./lib/tokenrhythm.mjs"
+import { firstNonEmpty, pos, text } from "./lib/fp.mjs"
 import { startLoopbackLogin } from "./lib/oauth.mjs"
 import { bootModels, createCatalog, fetchLiveModels, fetchPublicModels } from "./lib/models.mjs"
 import { API_KEY_PROMPT_MESSAGE, API_METHOD, CREATE_KEY_OPTION, LOGIN_INSTRUCTIONS, OAUTH_METHOD } from "./lib/text.mjs"
@@ -70,20 +71,6 @@ const ICON_URL = new URL("./assets/icon.png", import.meta.url)
 
 // ─── pure value helpers ───────────────────────────────────────────────────────
 
-const text = (v) => (typeof v === "string" && v.trim() ? v.trim() : undefined)
-
-const pos = (v) => {
-  const n = typeof v === "number" ? v : Number(v)
-  return Number.isFinite(n) && n > 0 ? n : undefined
-}
-
-const firstNonEmpty = (...vals) => {
-  for (const v of vals) {
-    const s = typeof v === "string" ? v.trim() : ""
-    if (s) return s
-  }
-  return ""
-}
 
 const SECRETISH = /(Bearer +[A-Za-z0-9._~+/-]{12,}|sk-[A-Za-z0-9-]{8,})/gi
 
