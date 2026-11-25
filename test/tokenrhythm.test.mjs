@@ -107,45 +107,30 @@ test("walletCard keeps decimal balances as display strings", () => {
   })
   assert.equal(card.plan, "Pay as you go")
   assert.equal(card.user, "Test User")
-  // all five the wallet reports, the total first: no balance line of its own,
-  // since the total is a row like the rest
-  assert.deepEqual(card.windows.map((w) => w.name), ["Available", "Recharge", "Gift credits", "Debt", "Frozen"])
-  assert.equal(card.windows[0].display, "12.34 CNY")
-  assert.equal(card.windows[0].balance, 12.34)
-  assert.equal(card.windows[0].unit, "CNY")
-  assert.equal(card.windows[0].aside, undefined)
-  assert.equal("used" in card.windows[0], false)
-  assert.equal("amount" in card.windows[0], false)
-  // only the total is weighed by routing; the rest are set aside
-  assert.equal(card.windows[1].aside, true)
-  assert.equal(card.windows[2].display, "0.50 CNY")
-  assert.equal(card.windows[2].balance, 0.5)
-  assert.equal(card.windows[2].aside, true)
-  // owed money is no balance left: a row of words the card shows, no figure
-  assert.equal(card.windows[3].display, "1.25 CNY")
-  assert.equal("balance" in card.windows[3], false)
-  assert.equal(card.windows[4].display, "0.00 CNY")
+  // one balance, its composition inside it: the total first, then every nonzero
+  // part named in the card's language — a zero is dropped, never shown
+  assert.equal(card.windows, undefined)
+  assert.equal(card.balance, "CNY 12.34 · Recharge CNY 10.00 · Gift credit CNY 0.50 · Debt CNY 1.25")
   assert.equal(card.signIn, "kept")
   const flat = walletCard({ wallet: { available_balance: "1", currency: "CNY" } })
-  assert.equal(flat.windows[0].display, "1.00 CNY")
-  assert.equal(flat.windows[1].display, "0.00 CNY")
+  assert.equal(flat.balance, "CNY 1.00")
 })
 
 test("walletCard renders balances with two decimal places", () => {
   const card = walletCard({ wallet: { currency: "CNY", balances: { available: "186.171994", recharge: "0", bonus: "0", debt: "0", frozen: "0" } } })
-  assert.equal(card.windows[0].display, "186.17 CNY")
-  assert.equal(card.windows.length, 5)
-  assert.equal(card.windows.every((w) => typeof w.used === "undefined"), true)
+  assert.equal(card.balance, "CNY 186.17")
 })
 
-test("wallet rows are named in the interface's language", () => {
+test("wallet parts are named in the interface's language", () => {
   const wallet = { currency: "CNY", balances: { available: "12.34", recharge: "0", bonus: "0.5", debt: "1.25", frozen: "0" } }
   const zh = walletCard({ wallet, lang: "zh" })
-  assert.deepEqual(zh.windows.map((w) => w.name), [ROW_NAMES.zh.available, ROW_NAMES.zh.recharge, ROW_NAMES.zh.bonus, ROW_NAMES.zh.debt, ROW_NAMES.zh.frozen])
+  assert.equal(zh.balance, `CNY 12.34 · ${ROW_NAMES.zh.bonus} CNY 0.50 · ${ROW_NAMES.zh.debt} CNY 1.25`)
   const ja = walletCard({ wallet, lang: "ja-JP" })
-  assert.equal(ja.windows[2].name, ROW_NAMES.ja.bonus)
+  assert.ok(ja.balance.includes(`${ROW_NAMES.ja.bonus} CNY 0.50`))
   const en = walletCard({ wallet })
-  assert.equal(en.windows[2].name, "Gift credits")
+  assert.ok(en.balance.includes("Gift credit CNY 0.50"))
+  // a zero part never shows, whatever the language
+  assert.ok(!zh.balance.includes(ROW_NAMES.zh.frozen))
 })
 
 test("the card's language follows magpie's setting, else the machine's", async () => {
@@ -307,7 +292,8 @@ test("usage maps the wallet for oauth and explains api-only keys", async () => {
   const card = await plugin.auth.usage(async () => oauthAuth)
   assert.equal(card.plan, "Pay as you go")
   // the total comes first, whatever language its name is in
-  assert.equal(card.windows[0].display, "88.80 CNY")
+  const uiLang = await uiLanguage()
+  assert.equal(card.balance, `CNY 88.80 · ${rowName(uiLang, "recharge")} CNY 80.00 · ${rowName(uiLang, "bonus")} CNY 8.80`)
   assert.equal(card.user, "Test User")
   const apiCard = await plugin.auth.usage(async () => ({ type: "api", key: "sk-byok" }))
   assert.match(apiCard.error, /browser sign-in/)
