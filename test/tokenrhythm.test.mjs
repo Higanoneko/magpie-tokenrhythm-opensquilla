@@ -107,43 +107,45 @@ test("walletCard keeps decimal balances as display strings", () => {
   })
   assert.equal(card.plan, "Pay as you go")
   assert.equal(card.user, "Test User")
-  assert.equal(card.balance, "12.34 CNY")
-  // A wallet window carries its figure and no share, so magpie draws no meter
-  // and says "{n} left" itself.
-  assert.equal(card.windows[0].name, "Gift credits")
-  assert.equal(card.windows[0].display, "0.50 CNY")
-  assert.equal(card.windows[0].balance, 0.5)
+  // all five the wallet reports, the total first: no balance line of its own,
+  // since the total is a row like the rest
+  assert.deepEqual(card.windows.map((w) => w.name), ["Available", "Recharge", "Gift credits", "Debt", "Frozen"])
+  assert.equal(card.windows[0].display, "12.34 CNY")
+  assert.equal(card.windows[0].balance, 12.34)
   assert.equal(card.windows[0].unit, "CNY")
+  assert.equal(card.windows[0].aside, undefined)
   assert.equal("used" in card.windows[0], false)
   assert.equal("amount" in card.windows[0], false)
-  // Owed money is no balance left: a row of words the card shows and routing
-  // passes over.
-  assert.equal(card.windows[1].name, "Debt")
-  assert.equal(card.windows[1].display, "1.25 CNY")
+  // only the total is weighed by routing; the rest are set aside
   assert.equal(card.windows[1].aside, true)
-  assert.equal("balance" in card.windows[1], false)
+  assert.equal(card.windows[2].display, "0.50 CNY")
+  assert.equal(card.windows[2].balance, 0.5)
+  assert.equal(card.windows[2].aside, true)
+  // owed money is no balance left: a row of words the card shows, no figure
+  assert.equal(card.windows[3].display, "1.25 CNY")
+  assert.equal("balance" in card.windows[3], false)
+  assert.equal(card.windows[4].display, "0.00 CNY")
   assert.equal(card.signIn, "kept")
   const flat = walletCard({ wallet: { available_balance: "1", currency: "CNY" } })
-  assert.equal(flat.balance, "1.00 CNY")
-  assert.equal(flat.windows.length, 0)
+  assert.equal(flat.windows[0].display, "1.00 CNY")
+  assert.equal(flat.windows[1].display, "0.00 CNY")
 })
 
 test("walletCard renders balances with two decimal places", () => {
   const card = walletCard({ wallet: { currency: "CNY", balances: { available: "186.171994", recharge: "0", bonus: "0", debt: "0", frozen: "0" } } })
-  assert.equal(card.balance, "186.17 CNY")
-  // every wallet empty: no window at all, since a balance of 0 reads as used up
-  assert.equal(card.windows.length, 0)
+  assert.equal(card.windows[0].display, "186.17 CNY")
+  assert.equal(card.windows.length, 5)
+  assert.equal(card.windows.every((w) => typeof w.used === "undefined"), true)
 })
 
 test("wallet rows are named in the interface's language", () => {
   const wallet = { currency: "CNY", balances: { available: "12.34", recharge: "0", bonus: "0.5", debt: "1.25", frozen: "0" } }
   const zh = walletCard({ wallet, lang: "zh" })
-  assert.equal(zh.windows[0].name, ROW_NAMES.zh.bonus)
-  assert.equal(zh.windows[1].name, ROW_NAMES.zh.debt)
+  assert.deepEqual(zh.windows.map((w) => w.name), [ROW_NAMES.zh.available, ROW_NAMES.zh.recharge, ROW_NAMES.zh.bonus, ROW_NAMES.zh.debt, ROW_NAMES.zh.frozen])
   const ja = walletCard({ wallet, lang: "ja-JP" })
-  assert.equal(ja.windows[0].name, ROW_NAMES.ja.bonus)
+  assert.equal(ja.windows[2].name, ROW_NAMES.ja.bonus)
   const en = walletCard({ wallet })
-  assert.equal(en.windows[0].name, "Gift credits")
+  assert.equal(en.windows[2].name, "Gift credits")
 })
 
 test("the card's language follows magpie's setting, else the machine's", async () => {
@@ -304,7 +306,8 @@ test("usage maps the wallet for oauth and explains api-only keys", async () => {
   const oauthAuth = { type: "oauth", access: "oauth-access", refresh: "", expires: Date.now() + 60_000, sub: "acct-1", sid: "sess-1" }
   const card = await plugin.auth.usage(async () => oauthAuth)
   assert.equal(card.plan, "Pay as you go")
-  assert.equal(card.balance, "88.80 CNY")
+  // the total comes first, whatever language its name is in
+  assert.equal(card.windows[0].display, "88.80 CNY")
   assert.equal(card.user, "Test User")
   const apiCard = await plugin.auth.usage(async () => ({ type: "api", key: "sk-byok" }))
   assert.match(apiCard.error, /browser sign-in/)
