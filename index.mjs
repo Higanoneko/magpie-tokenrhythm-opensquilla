@@ -35,7 +35,6 @@ import {
 } from "./lib/tokenrhythm.mjs"
 import { startLoopbackLogin } from "./lib/oauth.mjs"
 import { bootModels, createCatalog, fetchLiveModels, fetchPublicModels } from "./lib/models.mjs"
-import { uiLanguage } from "./lib/i18n.mjs"
 import { API_KEY_PROMPT_MESSAGE, API_METHOD, CREATE_KEY_OPTION, LOGIN_INSTRUCTIONS, OAUTH_METHOD } from "./lib/text.mjs"
 
 // ─── constants ────────────────────────────────────────────────────────────────
@@ -349,10 +348,7 @@ export async function TokenRhythmAuthPlugin({ client, magpie } = {}, options = {
     const account = await accountFor(access)
     assertSameAccount(auth, account)
     const wallet = await getWallet({ origin, accessToken: access, fetchImpl, timeoutMs })
-    // The card's row names are magpie's own words where it has them, and written
-    // here in the interface's language where it has none.
-    const lang = await uiLanguage()
-    return walletCard({ wallet, account, lang })
+    return walletCard({ wallet, account })
   }
 
   /**

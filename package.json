@@ -1,6 +1,6 @@
 {
   "name": "@higanoneko/opencode-tokenrhythm-auth",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "TokenRhythm (OpenSquilla) for Magpie: browser sign-in through the OpenSquilla OAuth integration (managed model key + wallet balance) or a pasted model key; OpenAI chat, Anthropic messages, embeddings, Wan 3.0 video generations and the System One (JEV) decision API",
   "homepage": "https://tokenrhythm.studio/",
   "type": "module",

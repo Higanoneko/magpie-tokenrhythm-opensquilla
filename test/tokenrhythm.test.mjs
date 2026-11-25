@@ -14,7 +14,6 @@ import {
   walletCard,
 } from "../lib/tokenrhythm.mjs"
 import { mergeRows, normalizeLive, normalizePublic, publicRowsOf } from "../lib/models.mjs"
-import { ROW_NAMES, cardLanguage, rowName, systemLanguage, uiLanguage } from "../lib/i18n.mjs"
 import { TokenRhythmAuthPlugin, _internal } from "../index.mjs"
 
 const { adaptSystemOneBody, authedFetch, DECIDE_MODEL, localIcon, NAME } = _internal
@@ -107,44 +106,31 @@ test("walletCard keeps decimal balances as display strings", () => {
   })
   assert.equal(card.plan, "Pay as you go")
   assert.equal(card.user, "Test User")
-  // one balance, its composition inside it: the total first, then every nonzero
-  // part named in the card's language — a zero is dropped, never shown
+  // the bare total and nothing else: no windows, no composition — what the
+  // account can spend, in the currency's own glyph
   assert.equal(card.windows, undefined)
-  assert.equal(card.balance, "CNY 12.34 · Paid CNY 10.00 · Gift credit CNY 0.50 · Debt CNY 1.25")
+  assert.equal(card.balance, "¥12.34")
   assert.equal(card.signIn, "kept")
   const flat = walletCard({ wallet: { available_balance: "1", currency: "CNY" } })
-  assert.equal(flat.balance, "CNY 1.00")
+  assert.equal(flat.balance, "¥1.00")
 })
 
 test("walletCard renders balances with two decimal places", () => {
   const card = walletCard({ wallet: { currency: "CNY", balances: { available: "186.171994", recharge: "0", bonus: "0", debt: "0", frozen: "0" } } })
-  assert.equal(card.balance, "CNY 186.17")
+  assert.equal(card.balance, "¥186.17")
 })
 
-test("wallet parts are named in the interface's language", () => {
-  const wallet = { currency: "CNY", balances: { available: "12.34", recharge: "0", bonus: "0.5", debt: "1.25", frozen: "0" } }
-  const zh = walletCard({ wallet, lang: "zh" })
-  assert.equal(zh.balance, `CNY 12.34 · ${ROW_NAMES.zh.bonus} CNY 0.50 · ${ROW_NAMES.zh.debt} CNY 1.25`)
-  const ja = walletCard({ wallet, lang: "ja-JP" })
-  assert.ok(ja.balance.includes(`${ROW_NAMES.ja.bonus} CNY 0.50`))
-  const en = walletCard({ wallet })
-  assert.ok(en.balance.includes("Gift credit CNY 0.50"))
-  // a zero part never shows, whatever the language
-  assert.ok(!zh.balance.includes(ROW_NAMES.zh.frozen))
-})
-
-test("the card's language follows magpie's setting, else the machine's", async () => {
-  const settings = (lang) => async () => JSON.stringify({ lang })
-  assert.equal(await uiLanguage({ readFileImpl: settings("zh-TW") }), "zh-TW")
-  const none = async () => {
-    throw new Error("no settings here")
-  }
-  assert.equal(await uiLanguage({ readFileImpl: none }), cardLanguage(systemLanguage()))
-  assert.equal(cardLanguage("de-DE"), "de")
-  assert.equal(cardLanguage("en-GB"), "en")
-  assert.equal(cardLanguage(""), "en")
-  assert.equal(rowName("fr", "debt"), "Debt")
-  assert.equal(rowName("zh", "nope"), "nope")
+test("wallet total carries the currency's own glyph", () => {
+  const cny = walletCard({ wallet: { currency: "CNY", balances: { available: "12.34" } } })
+  assert.equal(cny.balance, "¥12.34")
+  const usd = walletCard({ wallet: { currency: "USD", balances: { available: "3.5" } } })
+  assert.equal(usd.balance, "$3.50")
+  // an unknown currency keeps its code, the amount still ending the string
+  const odd = walletCard({ wallet: { currency: "XBT", balances: { available: "1" } } })
+  assert.equal(odd.balance, "XBT1.00")
+  // a wallet that says nothing reads as zero rather than breaking
+  const none = walletCard({ wallet: { currency: "CNY" } })
+  assert.equal(none.balance, "¥0.00")
 })
 
 test("model catalog merges public metadata with the live credential list", () => {
@@ -292,8 +278,7 @@ test("usage maps the wallet for oauth and explains api-only keys", async () => {
   const card = await plugin.auth.usage(async () => oauthAuth)
   assert.equal(card.plan, "Pay as you go")
   // the total comes first, whatever language its name is in
-  const uiLang = await uiLanguage()
-  assert.equal(card.balance, `CNY 88.80 · ${rowName(uiLang, "recharge")} CNY 80.00 · ${rowName(uiLang, "bonus")} CNY 8.80`)
+  assert.equal(card.balance, "¥88.80")
   assert.equal(card.user, "Test User")
   const apiCard = await plugin.auth.usage(async () => ({ type: "api", key: "sk-byok" }))
   assert.match(apiCard.error, /browser sign-in/)
