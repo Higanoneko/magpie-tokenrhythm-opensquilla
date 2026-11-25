@@ -14,6 +14,7 @@ import {
   walletCard,
 } from "../lib/tokenrhythm.mjs"
 import { mergeRows, normalizeLive, normalizePublic, publicRowsOf } from "../lib/models.mjs"
+import { ROW_NAMES, cardLanguage, rowName, systemLanguage, uiLanguage } from "../lib/i18n.mjs"
 import { TokenRhythmAuthPlugin, _internal } from "../index.mjs"
 
 const { adaptSystemOneBody, authedFetch, DECIDE_MODEL, localIcon, NAME } = _internal
@@ -132,6 +133,31 @@ test("walletCard renders balances with two decimal places", () => {
   assert.equal(card.balance, "186.17 CNY")
   // every wallet empty: no window at all, since a balance of 0 reads as used up
   assert.equal(card.windows.length, 0)
+})
+
+test("wallet rows are named in the interface's language", () => {
+  const wallet = { currency: "CNY", balances: { available: "12.34", recharge: "0", bonus: "0.5", debt: "1.25", frozen: "0" } }
+  const zh = walletCard({ wallet, lang: "zh" })
+  assert.equal(zh.windows[0].name, ROW_NAMES.zh.bonus)
+  assert.equal(zh.windows[1].name, ROW_NAMES.zh.debt)
+  const ja = walletCard({ wallet, lang: "ja-JP" })
+  assert.equal(ja.windows[0].name, ROW_NAMES.ja.bonus)
+  const en = walletCard({ wallet })
+  assert.equal(en.windows[0].name, "Gift credits")
+})
+
+test("the card's language follows magpie's setting, else the machine's", async () => {
+  const settings = (lang) => async () => JSON.stringify({ lang })
+  assert.equal(await uiLanguage({ readFileImpl: settings("zh-TW") }), "zh-TW")
+  const none = async () => {
+    throw new Error("no settings here")
+  }
+  assert.equal(await uiLanguage({ readFileImpl: none }), cardLanguage(systemLanguage()))
+  assert.equal(cardLanguage("de-DE"), "de")
+  assert.equal(cardLanguage("en-GB"), "en")
+  assert.equal(cardLanguage(""), "en")
+  assert.equal(rowName("fr", "debt"), "Debt")
+  assert.equal(rowName("zh", "nope"), "nope")
 })
 
 test("model catalog merges public metadata with the live credential list", () => {
