@@ -1,4 +1,4 @@
-# @magpie-community/opencode-tokenrhythm-auth
+# @higanoneko/opencode-tokenrhythm-auth
 
 TokenRhythm（基元律动，<https://tokenrhythm.studio>）的 magpie / OpenCode 供应商插件。
 
@@ -64,7 +64,23 @@ curl https://tokenrhythm.studio/v1/decision \
   -d '{"model":"NeoHorse-Jev-4B","criteria":[{"key":"fast","description":"优先速度"}],"input":"..."}'
 ```
 
-## 配置 Configuration
+## 用量卡片
+
+用量卡片显示的是 TokenRhythm 通过 OpenSquilla 集成上报的钱包：
+
+- **剩余多少** — 卡片自身的余额行就是钱包的 `available`，人民币两位小数。标题和
+  「剩余」都由 magpie 用它自己的语言写，路由时余额更多的账号排在前面。
+- **赠送积分**（`Gift credits`）— 只带 `balance` 与 `unit`、不带 `used` 和 `limit`
+  的窗口：按量计费的钱包没有「已用占比」这回事，所以 magpie 不画进度条，直接写
+  「6,291 积分 剩余」。余额为 0 的钱包不出窗口，因为 magpie 把 0 当作已用完。
+- **欠费**（`Debt`）与 **冻结**（`Frozen`）— 欠着的、被扣住的钱，不是「剩余」，
+  所以只在不为 0 时作为纯文字行出现（不画进度条，也不参与路由）。
+
+供应商插件里的行名属于「数据」：magpie 只翻译它自己词表里有的词（例如
+`Gift credits`），其余原样显示。所以这张卡片只保留一行余额和零星几个窗口，
+而不是五行插件自造的英文标签。
+
+## 配置
 
 | 选项 Option | 默认 Default | 说明 Description |
 | --- | --- | --- |
