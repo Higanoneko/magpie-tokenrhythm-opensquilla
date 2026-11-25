@@ -110,7 +110,7 @@ test("walletCard keeps decimal balances as display strings", () => {
   // one balance, its composition inside it: the total first, then every nonzero
   // part named in the card's language — a zero is dropped, never shown
   assert.equal(card.windows, undefined)
-  assert.equal(card.balance, "CNY 12.34 · Recharge CNY 10.00 · Gift credit CNY 0.50 · Debt CNY 1.25")
+  assert.equal(card.balance, "CNY 12.34 · Paid CNY 10.00 · Gift credit CNY 0.50 · Debt CNY 1.25")
   assert.equal(card.signIn, "kept")
   const flat = walletCard({ wallet: { available_balance: "1", currency: "CNY" } })
   assert.equal(flat.balance, "CNY 1.00")

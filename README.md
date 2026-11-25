@@ -81,7 +81,7 @@ CNY 185.93 · Recharge CNY 185.93 · Gift credit CNY 0.50
 | Part | The wallet's | Shown when |
 | --- | --- | --- |
 | the total | `available` | always |
-| Recharge | `recharge` | nonzero |
+| Paid | `recharge` | nonzero |
 | Gift credit | `bonus` | nonzero |
 | Debt | `debt` | nonzero |
 | Frozen | `frozen` | nonzero |
